@@ -28,6 +28,12 @@ def procesar_form_empleado(dataForm, foto_perfil):
     try:
         with connectionBD() as conexion_MySQLdb:
             with conexion_MySQLdb.cursor(dictionary=True) as cursor:
+                # Validar si el correo ya existe
+                cursor.execute("SELECT COUNT(*) FROM tbl_empleados WHERE email_empleado = %s", (dataForm['email_empleado'],))
+                existe = cursor.fetchone()['COUNT(*)']
+
+                if existe > 0:
+                    return f"Error: El correo {dataForm['email_empleado']} ya está registrado"
 
                 sql = "INSERT INTO tbl_empleados (nombre_empleado, apellido_empleado, sexo_empleado, telefono_empleado, email_empleado, profesion_empleado, foto_empleado, salario_empleado) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
