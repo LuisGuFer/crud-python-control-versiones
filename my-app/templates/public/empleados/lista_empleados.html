@@ -1,97 +1,365 @@
 {% extends 'public/base_cpanel.html' %}
 <!--Cambiando el title-->
 {% block title %}Crud con Python 🐍 | Lista de Empleados{% endblock %}
-<!--Inicio del block-->
+
+{% block customCSS %}
+<style>
+  /* ===== TARJETAS DE ESTADÍSTICAS ===== */
+  .stat-card {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.10) !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.15) !important;
+  }
+  .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+  }
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.82rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  /* ===== BADGE DE ESTADO ONLINE ===== */
+  .online-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8f9ee;
+    color: #28a745;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .online-dot {
+    width: 8px;
+    height: 8px;
+    background: #28a745;
+    border-radius: 50%;
+    animation: pulse-green 1.5s infinite;
+  }
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ===== HEADER DE SECCIÓN ===== */
+  .section-header {
+    background: linear-gradient(135deg, #696cff 0%, #9155fd 100%);
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+    color: #fff;
+  }
+  .section-header h4 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.15rem;
+  }
+  .section-header p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  /* ===== TABLA MEJORADA ===== */
+  #tbl_empleados thead th {
+    background: #f8f7ff;
+    color: #696cff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top: none;
+    padding: 14px 12px;
+  }
+  #tbl_empleados tbody tr {
+    transition: background 0.15s;
+  }
+  #tbl_empleados tbody tr:hover {
+    background: #f0efff !important;
+  }
+
+  /* ===== SEARCH MEJORADO ===== */
+  .search-wrapper {
+    position: relative;
+  }
+  .search-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #696cff;
+    font-size: 1rem;
+  }
+  .search-wrapper input {
+    padding-left: 40px;
+    border-radius: 8px !important;
+    border: 2px solid #e7e5ff !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-wrapper input:focus {
+    border-color: #696cff !important;
+    box-shadow: 0 0 0 3px rgba(105,108,255,0.15) !important;
+  }
+
+  /* ===== BOTÓN NUEVO EMPLEADO ===== */
+  .btn-nuevo {
+    background: linear-gradient(135deg, #696cff 0%, #9155fd 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-nuevo:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* ===== SALARIO CHIP ===== */
+  .salario-chip {
+    background: #e8f9ee;
+    color: #28a745;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.82rem;
+  }
+
+  /* ===== SEXO BADGE ===== */
+  .sexo-m { background: #dbeeff; color: #0d6efd; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+  .sexo-f { background: #fce4f3; color: #d63384; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; }
+
+  /* ===== TIMESTAMP ===== */
+  .last-update {
+    font-size: 0.78rem;
+    color: #aaa;
+  }
+</style>
+{% endblock %}
+
 {% block body %}
 
-<div class="card" style="border-radius: 0px !important">
-  <div class="row justify-content-center mb-2">
-    <div class="col-md-12 mb-4">
-      <h3 class="text-center mt-5 mb-3">LISTA DE EMPLEADOS</h3>
-      <hr />
-    </div>
-
-    <div class="row justify-content-end">
-      <div class="col-md-6 mt-4 py-2">
-        <input
-          type="search"
-          id="search"
-          class="form-control border-0 shadow-none"
-          placeholder="Buscar empleado..."
-          onkeyup="buscadorTable('tbl_empleados')" />
+<!-- ===== TARJETAS DE ESTADÍSTICAS ===== -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#e8e7ff;">
+          <i class="bi bi-people-fill" style="color:#696cff;"></i>
+        </div>
+        <div>
+          <div class="stat-number" id="total-empleados">—</div>
+          <div class="stat-label">Total Empleados</div>
+        </div>
       </div>
     </div>
-
-    <div class="row justify-content-center mb-2">
-      <div class="table-responsive text-nowrap table-hover">
-        <table
-          table-hover
-          id="tbl_empleados"
-          class="table table-striped table-bordered"
-          cellspacing="0"
-          width="100%">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Sexo</th>
-              <th>Salario</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for empleado in empleados %}
-            <tr id="empleado_{{ empleado.id_empleado }}">
-              <td>{{ loop.index }}</td>
-              <td>{{ empleado.nombre_empleado }}</td>
-              <td>{{ empleado.apellido_empleado }}</td>
-              <td>{{ empleado.sexo_empleado }}</td>
-              <td>
-                $ {{ '{:,.0f}'.format(empleado.salario_empleado).replace(',',
-                '.')}}
-              </td>
-              <td width="10px">
-                <a
-                  href="/detalles-empleado/{{ empleado.id_empleado }}"
-                  title="Ver envio"
-                  type="button"
-                  class="btn btn-info btn-sm"
-                  data-bs-toggle="tooltip"
-                  data-bs-offset="0,4"
-                  data-bs-placement="top"
-                  data-bs-html="true"
-                  title="<span>Ver detalles</span>">
-                  <i class="bi bi-eye"></i>
-                  Ver detalles
-                </a>
-                <a
-                  href="{{ url_for('viewEditarEmpleado', id = empleado.id_empleado) }}"
-                  class="btn btn-success btn-sm"
-                  tooltip="Actualizar Registro">
-                  <i class="bi bi-arrow-clockwise"></i>
-                  Actualizar
-                </a>
-                <a
-                  href="#"
-                  onclick="eliminarEmpleado('{{ empleado.id_empleado }}','{{ empleado.foto_empleado }}');"
-                  class="btn btn-danger btn-sm"
-                  data-bs-toggle="tooltip"
-                  data-bs-offset="0,4"
-                  data-bs-placement="top"
-                  data-bs-html="true"
-                  title="<span>Eliminar empleado {{ empleado.nombre_empleado }}</span>">
-                  <i class="bi bi-trash3"></i>
-                  Eliminar
-                </a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#dbeeff;">
+          <i class="bi bi-gender-male" style="color:#0d6efd;"></i>
+        </div>
+        <div>
+          <div class="stat-number" id="total-masculino">—</div>
+          <div class="stat-label">Masculino</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#fce4f3;">
+          <i class="bi bi-gender-female" style="color:#d63384;"></i>
+        </div>
+        <div>
+          <div class="stat-number" id="total-femenino">—</div>
+          <div class="stat-label">Femenino</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card stat-card p-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="stat-icon" style="background:#e8f9ee;">
+          <i class="bi bi-cash-stack" style="color:#28a745;"></i>
+        </div>
+        <div>
+          <div class="stat-number" id="promedio-salario">—</div>
+          <div class="stat-label">Salario Promedio</div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ===== TABLA PRINCIPAL ===== -->
+<div class="card" style="border-radius: 12px !important; overflow: hidden;">
+
+  <!-- Header de sección -->
+  <div class="section-header d-flex align-items-center justify-content-between">
+    <div>
+      <h4><i class="bi bi-person-lines-fill me-2"></i>Lista de Empleados</h4>
+      <p class="last-update">Última actualización: <span id="hora-actualizacion">—</span></p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span class="online-badge">
+        <span class="online-dot"></span> En línea
+      </span>
+      <a href="{{ url_for('viewFormEmpleado') }}" class="btn btn-light btn-nuevo">
+        <i class="bi bi-plus-circle me-1"></i> Nuevo Empleado
+      </a>
+    </div>
+  </div>
+
+  <!-- Cuerpo de tabla -->
+  <div class="p-3">
+
+    <!-- Buscador -->
+    <div class="row mb-3">
+      <div class="col-md-5">
+        <div class="search-wrapper">
+          <i class="bi bi-search"></i>
+          <input
+            type="search"
+            id="search"
+            class="form-control"
+            placeholder="Buscar empleado por nombre, apellido..."
+            onkeyup="buscadorTable('tbl_empleados')" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-responsive">
+      <table
+        id="tbl_empleados"
+        class="table table-striped table-bordered table-hover align-middle"
+        cellspacing="0"
+        width="100%">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Sexo</th>
+            <th>Salario</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for empleado in empleados %}
+          <tr id="empleado_{{ empleado.id_empleado }}">
+            <td><span class="text-muted">{{ loop.index }}</span></td>
+            <td><strong>{{ empleado.nombre_empleado }}</strong></td>
+            <td>{{ empleado.apellido_empleado }}</td>
+            <td>
+              {% if empleado.sexo_empleado == 'M' %}
+                <span class="sexo-m"><i class="bi bi-gender-male me-1"></i>Masculino</span>
+              {% elif empleado.sexo_empleado == 'F' %}
+                <span class="sexo-f"><i class="bi bi-gender-female me-1"></i>Femenino</span>
+              {% else %}
+                <span>{{ empleado.sexo_empleado }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="salario-chip">
+                $ {{ '{:,.0f}'.format(empleado.salario_empleado).replace(',', '.') }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="/detalles-empleado/{{ empleado.id_empleado }}"
+                  class="btn btn-info btn-sm" title="Ver detalles">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{{ url_for('viewEditarEmpleado', id=empleado.id_empleado) }}"
+                  class="btn btn-success btn-sm" title="Actualizar">
+                  <i class="bi bi-pencil-square"></i>
+                </a>
+                <a href="#"
+                  onclick="eliminarEmpleado('{{ empleado.id_empleado }}','{{ empleado.foto_empleado }}');"
+                  class="btn btn-danger btn-sm" title="Eliminar">
+                  <i class="bi bi-trash3"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /p-3 -->
+</div><!-- /card -->
+
+{% endblock %}
+
+{% block customJS %}
+<script>
+  // ===== Calcular estadísticas desde la tabla =====
+  document.addEventListener('DOMContentLoaded', function () {
+
+    // Hora de actualización
+    const ahora = new Date();
+    document.getElementById('hora-actualizacion').textContent =
+      ahora.toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const filas = document.querySelectorAll('#tbl_empleados tbody tr');
+    let total = filas.length;
+    let masculino = 0, femenino = 0, sumaSalarios = 0;
+
+    filas.forEach(function(fila) {
+      const sexoCell = fila.cells[3];
+      const salarioCell = fila.cells[4];
+      const textoSexo = sexoCell ? sexoCell.textContent.trim() : '';
+      if (textoSexo.includes('Masculino')) masculino++;
+      else if (textoSexo.includes('Femenino')) femenino++;
+
+      const salarioTexto = salarioCell ? salarioCell.textContent.replace(/[^0-9]/g, '') : '0';
+      sumaSalarios += parseInt(salarioTexto) || 0;
+    });
+
+    const promedio = total > 0 ? Math.round(sumaSalarios / total) : 0;
+
+    // Animación contadora
+    function animarContador(id, valorFinal, prefijo = '', sufijo = '') {
+      const el = document.getElementById(id);
+      let inicio = 0;
+      const paso = Math.ceil(valorFinal / 30);
+      const intervalo = setInterval(function() {
+        inicio = Math.min(inicio + paso, valorFinal);
+        el.textContent = prefijo + inicio.toLocaleString('es') + sufijo;
+        if (inicio >= valorFinal) clearInterval(intervalo);
+      }, 30);
+    }
+
+    animarContador('total-empleados', total);
+    animarContador('total-masculino', masculino);
+    animarContador('total-femenino', femenino);
+    animarContador('promedio-salario', promedio, '$', '');
+  });
+</script>
 {% endblock %}

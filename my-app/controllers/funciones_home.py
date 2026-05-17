@@ -28,12 +28,23 @@ def procesar_form_empleado(dataForm, foto_perfil):
     try:
         with connectionBD() as conexion_MySQLdb:
             with conexion_MySQLdb.cursor(dictionary=True) as cursor:
+                # Validar si el correo ya existe
+                cursor.execute("SELECT COUNT(*) FROM tbl_empleados WHERE email_empleado = %s", (dataForm['email_empleado'],))
+                existe = cursor.fetchone()['COUNT(*)']
+
+                if existe > 0:
+                    return f"Error: El correo {dataForm['email_empleado']} ya está registrado"
 
                 sql = "INSERT INTO tbl_empleados (nombre_empleado, apellido_empleado, sexo_empleado, telefono_empleado, email_empleado, profesion_empleado, foto_empleado, salario_empleado) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
 
+                # Validar teléfono: solo números y máximo 10 dígitos
+                telefono = re.sub('[^0-9]+', '', dataForm['telefono_empleado'])
+                if len(telefono) > 10:
+                    return f"Error: El teléfono {telefono} no es válido (máximo 10 dígitos)"                
+
                 # Creando una tupla con los valores del INSERT
                 valores = (dataForm['nombre_empleado'], dataForm['apellido_empleado'], dataForm['sexo_empleado'],
-                           dataForm['telefono_empleado'], dataForm['email_empleado'], dataForm['profesion_empleado'], result_foto_perfil, salario_entero)
+                           dataForm['telefono'], dataForm['email_empleado'], dataForm['profesion_empleado'], result_foto_perfil, salario_entero)
                 cursor.execute(sql, valores)
 
                 conexion_MySQLdb.commit()
